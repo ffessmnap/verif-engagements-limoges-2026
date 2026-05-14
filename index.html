@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle des engagements - France NAP Limoges 2026</title>
+  <link rel="stylesheet" href="./styles.css?v=20260512-1">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Championnat de France de nage avec palmes</p>
+        <h1>Controle des engagements - Limoges 2026</h1>
+        <p class="subtitle">
+          Charge les resultats de Dijon, Rennes et Aix, puis les engagements juniors/seniors, cadets et bonus.
+          Le tableau de bord regroupe les conformites, les points a verifier et les statistiques utiles.
+        </p>
+      </div>
+      <div class="event-card">
+        <span>Perimetre</span>
+        <strong>6 imports</strong>
+        <small>Resultats + engagements</small>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <aside class="panel controls-panel">
+        <div class="section-head">
+          <h2>Imports</h2>
+          <button id="toggleImports" class="secondary-button imports-toggle" type="button">Reduire</button>
+        </div>
+
+        <div id="importsBody" class="imports-body">
+        <div class="upload-grid">
+          <label class="file-drop">
+            <input id="dijonFile" type="file" accept=".csv,.txt,text/csv,text/plain">
+            <span>Resultats Dijon</span>
+            <small>CSV ou texte structure</small>
+          </label>
+          <label class="file-drop">
+            <input id="rennesFile" type="file" accept=".csv,.txt,text/csv,text/plain">
+            <span>Resultats Rennes</span>
+            <small>CSV ou texte structure</small>
+          </label>
+          <label class="file-drop">
+            <input id="aixFile" type="file" accept=".csv,.txt,text/csv,text/plain">
+            <span>Resultats Aix-en-Provence</span>
+            <small>CSV ou texte structure</small>
+          </label>
+          <label class="file-drop">
+            <input id="jsEntriesFile" type="file" accept=".csv,.txt,text/csv,text/plain">
+            <span>Engagements juniors / seniors</span>
+            <small>Courses individuelles et relais</small>
+          </label>
+          <label class="file-drop">
+            <input id="cadetEntriesFile" type="file" accept=".csv,.txt,text/csv,text/plain">
+            <span>Engagements cadets</span>
+            <small>Suivi statistique</small>
+          </label>
+          <label class="file-drop">
+            <input id="bonusEntriesFile" type="file" accept=".csv,.txt,text/csv,text/plain">
+            <span>Courses bonus</span>
+            <small>Juniors / seniors</small>
+          </label>
+        </div>
+
+        <label class="folder-picker secondary-button">
+          <input id="folderPicker" type="file" webkitdirectory directory multiple>
+          <span>Choisir un dossier</span>
+        </label>
+        <button id="loadWorkspaceFiles" class="secondary-button" type="button">Charger les fichiers du dossier</button>
+        <button id="loadDemo" class="secondary-button" type="button">Charger un jeu d'exemple</button>
+        <button id="runChecks" class="primary-button" type="button">Verifier les engagements</button>
+
+        <div class="hint">
+          Avec `Choisir un dossier`, l'outil associe automatiquement les fichiers contenant :
+          <strong>dijon, rennes, aix, bonus, cadet, junior senior</strong>.
+          <br>
+          L'outil reconnait les exports E-NAP du dossier ainsi que les tableaux simples.
+          Pour les tableaux simples, les colonnes prioritaires sont :
+          <strong>club, licence, nom, prenom, categorie, epreuve</strong>.
+        </div>
+        </div>
+      </aside>
+
+      <section class="panel results-panel">
+        <div class="section-head results-head">
+          <div>
+            <h2>Tableau de bord</h2>
+            <p id="datasetMeta">Aucune donnee chargee</p>
+          </div>
+          <div class="head-actions">
+            <button id="exportReport" class="secondary-button" type="button" disabled>Exporter le controle</button>
+            <button id="exportDetailedReport" class="secondary-button" type="button" disabled>Exporter le detail complet</button>
+            <button id="exportClubSummary" class="secondary-button" type="button" disabled>Exporter la synthese clubs</button>
+            <button id="exportEventSummary" class="secondary-button" type="button" disabled>Exporter la synthese courses</button>
+            <button id="exportClubPdf" class="secondary-button" type="button" disabled>Recap club PDF</button>
+            <button id="exportViewer" class="secondary-button" type="button" disabled>Exporter version consultable</button>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          <article><span>Nageurs</span><strong id="totalAthletes">0</strong></article>
+          <article><span>Engagements</span><strong id="totalEntries">0</strong></article>
+          <article><span>Non conformes</span><strong id="nonCompliantIssues">0</strong></article>
+          <article><span>A verifier</span><strong id="pendingIssues">0</strong></article>
+          <article><span>Verifies</span><strong id="reviewedIssues">0</strong></article>
+          <article><span>Relais clubs</span><strong id="relayOnlyCount">0</strong></article>
+        </div>
+
+        <div class="toolbar">
+          <input id="searchInput" type="search" placeholder="Filtrer par nageur, club ou epreuve">
+          <select id="clubFilter">
+            <option value="all">Tous les clubs</option>
+          </select>
+          <select id="eventFilter">
+            <option value="all">Toutes les epreuves</option>
+          </select>
+          <select id="categoryFilter">
+            <option value="all">Toutes les categories</option>
+          </select>
+          <select id="sexFilter">
+            <option value="all">Tous les sexes</option>
+          </select>
+          <select id="statusFilter">
+            <option value="all">Tous les statuts</option>
+            <option value="conforme">Conforme</option>
+            <option value="a-verifier">A verifier</option>
+            <option value="non-conforme">Non conforme</option>
+          </select>
+          <label class="inline-toggle"><input id="nonCompliantOnly" type="checkbox"> Non conformes uniquement</label>
+          <label class="inline-toggle"><input id="meetingMissingOnly" type="checkbox"> Presence meeting manquante</label>
+          <button id="resetFilters" class="secondary-button compact-action" type="button">Reinitialiser</button>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-button active" data-view="athletes" type="button">Tous les nageurs</button>
+          <button class="tab-button" data-view="issues" type="button">Anomalies</button>
+          <button class="tab-button" data-view="bonus" type="button">Bonus</button>
+          <button class="tab-button" data-view="relays" type="button">Relais</button>
+          <button class="tab-button" data-view="clubs" type="button">Synthese clubs</button>
+          <button class="tab-button" data-view="events" type="button">Synthese courses</button>
+          <button class="tab-button" data-view="todo" type="button">Liste a traiter</button>
+        </div>
+
+        <div id="eventSummaryControls" class="event-summary-controls hidden">
+          <button class="event-summary-button active" data-event-sex="all" type="button">Tous</button>
+          <button class="event-summary-button" data-event-sex="F" type="button">Femmes</button>
+          <button class="event-summary-button" data-event-sex="M" type="button">Hommes</button>
+        </div>
+
+        <div class="table-wrap">
+          <table id="athletesTable">
+            <thead>
+              <tr>
+                <th data-sort="club">Club</th>
+                <th data-sort="swimmer">Nageur</th>
+                <th data-sort="naissance">Date de naissance</th>
+                <th data-sort="categorie">Categorie</th>
+                <th>Presences Dijon / Rennes / Aix</th>
+                <th data-sort="status">Statut engagement</th>
+                <th data-sort="individuals">Individuels</th>
+                <th data-sort="bonus">Bonus</th>
+              </tr>
+            </thead>
+            <tbody id="athletesBody">
+              <tr class="empty-row"><td colspan="8">Le controle apparaitra ici.</td></tr>
+            </tbody>
+          </table>
+
+          <table id="issuesTable" class="hidden">
+            <thead>
+              <tr>
+                <th>Niveau</th>
+                <th>Type</th>
+                <th>Club</th>
+                <th>Nageur</th>
+                <th>Epreuve</th>
+                <th>Controle</th>
+                <th>Commentaire</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="issuesBody">
+              <tr class="empty-row"><td colspan="8">Aucune anomalie a afficher.</td></tr>
+            </tbody>
+          </table>
+
+          <table id="bonusTable" class="hidden">
+            <thead>
+              <tr>
+                <th>Club</th>
+                <th>Nageur</th>
+                <th>Epreuve bonus</th>
+                <th>Presence Rennes</th>
+                <th>Trace dans les 3 resultats</th>
+                <th>Regle appliquee</th>
+                <th>Decision</th>
+              </tr>
+            </thead>
+            <tbody id="bonusBody">
+              <tr class="empty-row"><td colspan="7">Aucune course bonus chargee.</td></tr>
+            </tbody>
+          </table>
+
+          <table id="relaysTable" class="hidden">
+            <thead>
+              <tr>
+                <th>Club</th>
+                <th>Categorie</th>
+                <th>Epreuve</th>
+                <th>Temps engagement</th>
+                <th>Fichier</th>
+              </tr>
+            </thead>
+            <tbody id="relaysBody">
+              <tr class="empty-row"><td colspan="5">Aucun relais engage.</td></tr>
+            </tbody>
+          </table>
+
+          <table id="clubsTable" class="hidden">
+            <thead>
+              <tr>
+                <th>Club</th>
+                <th>Nageurs</th>
+                <th>Engagements</th>
+                <th>Anomalies</th>
+                <th>Bonus a verifier</th>
+              </tr>
+            </thead>
+            <tbody id="clubsBody">
+              <tr class="empty-row"><td colspan="5">La synthese par club apparaitra ici.</td></tr>
+            </tbody>
+          </table>
+
+          <table id="eventsTable" class="hidden">
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Total nageurs</th>
+                <th>Femmes</th>
+                <th>Hommes</th>
+                <th>Mixtes</th>
+                <th>Cadets</th>
+                <th>Juniors</th>
+                <th>Seniors</th>
+              </tr>
+            </thead>
+            <tbody id="eventsBody">
+              <tr class="empty-row"><td colspan="8">La synthese courses apparaitra ici.</td></tr>
+            </tbody>
+          </table>
+
+          <table id="todoTable" class="hidden">
+            <thead>
+              <tr>
+                <th>Niveau</th>
+                <th>Type</th>
+                <th>Club</th>
+                <th>Nageur</th>
+                <th>Epreuve</th>
+                <th>Controle</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="todoBody">
+              <tr class="empty-row"><td colspan="7">La liste a traiter apparaitra ici.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <section id="athleteDialog" class="athlete-dialog hidden" aria-hidden="true">
+    <div class="athlete-dialog-backdrop" data-close-dialog="true"></div>
+    <article class="athlete-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="athleteDialogTitle">
+      <button id="closeAthleteDialog" class="dialog-close" type="button" aria-label="Fermer">X</button>
+      <header class="dialog-header">
+        <p id="athleteDialogClub" class="eyebrow"></p>
+        <h2 id="athleteDialogTitle"></h2>
+        <div id="athleteDialogMeta" class="dialog-meta"></div>
+      </header>
+
+      <section class="dialog-section">
+        <h3>Engagements</h3>
+        <div class="table-wrap compact-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Epreuve</th>
+                <th>Temps engagement</th>
+                <th>Conformite</th>
+                <th>Detail</th>
+              </tr>
+            </thead>
+            <tbody id="athleteEntriesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="dialog-section">
+        <h3>Temps retrouves sur les 3 competitions</h3>
+        <div class="table-wrap compact-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Lieu</th>
+                <th>Epreuve</th>
+                <th>Temps</th>
+                <th>Statut</th>
+                <th>Motif si 00.00</th>
+              </tr>
+            </thead>
+            <tbody id="athleteResultsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </article>
+  </section>
+
+  <script src="./app.js?v=20260512-1"></script>
+</body>
+</html>
